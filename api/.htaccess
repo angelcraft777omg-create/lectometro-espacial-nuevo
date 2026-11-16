@@ -1,0 +1,4 @@
+# Nadie debe abrir estos archivos directamente desde el navegador.
+<FilesMatch "^(config(\.ejemplo)?|bd)\.php$">
+  Require all denied
+</FilesMatch>

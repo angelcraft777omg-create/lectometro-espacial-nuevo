@@ -1,0 +1,10 @@
+.DS_Store
+Thumbs.db
+node_modules/
+*.log
+
+# Tu configuracion (clave del maestro y datos de la base de datos): nunca a GitHub
+api/config.php
+
+# Base de datos de pruebas
+api/datos/*.sqlite*

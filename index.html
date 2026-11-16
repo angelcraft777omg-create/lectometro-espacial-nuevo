@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Lectómetro Espacial: la misión de lectura de nuestra clase de 5.º de Primaria.">
+<meta name="robots" content="noindex">
+<title>Lectómetro Espacial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="gated">
+<canvas id="stars" aria-hidden="true"></canvas>
+<main id="gate"><div class="card gate-card" id="gate-card" aria-live="polite"></div></main>
+<div class="shell">
+
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="30" fill="#171c52" stroke="#3a428f" stroke-width="2"/>
+        <g transform="rotate(35 32 32)">
+          <path d="M32 8c8 7 11 17 11 26v8H21v-8c0-9 3-19 11-26z" fill="#f5f2ff"/>
+          <circle cx="32" cy="26" r="5" fill="#4be0c2" stroke="#0b0f33" stroke-width="2"/>
+          <path d="M21 34l-8 10h8zM43 34l8 10h-8z" fill="#ff6f59"/>
+          <path d="M26 44h12l-6 13z" fill="#ffd447"/>
+        </g>
+      </svg>
+      <div>
+        <h1>Lectómetro Espacial</h1>
+        <p>Misión de lectura de 5.º de Primaria</p>
+      </div>
+    </div>
+    <div class="top-tools">
+      <span class="sync" id="sync" data-state="loading"><i></i><span id="sync-text">Conectando…</span></span>
+      <span class="userchip" id="userchip" hidden></span>
+      <button type="button" class="btn small ghost" id="logout" hidden>Salir</button>
+    </div>
+  </header>
+
+  <section class="stats" aria-label="Resumen de la clase">
+    <div class="stat"><b id="st-students">0</b><span>tripulantes</span></div>
+    <div class="stat"><b id="st-books">0</b><span>libros terminados</span></div>
+    <div class="stat"><b id="st-pages">0</b><span>páginas leídas</span></div>
+    <div class="stat"><b id="st-reviews">0</b><span>reseñas publicadas</span></div>
+  </section>
+
+  <nav class="tabs" aria-label="Secciones">
+    <a href="#mapa" data-tab="mapa">Mapa espacial</a>
+    <a href="#tripulacion" data-tab="tripulacion" class="teacher-only">Tripulación</a>
+    <a href="#lecturas" data-tab="lecturas">Lecturas</a>
+    <a href="#retos" data-tab="retos">Retos de grupo</a>
+    <a href="#resenas" data-tab="resenas">Reseñas</a>
+    <a href="#seguimiento" data-tab="seguimiento" class="teacher-only">Seguimiento</a>
+  </nav>
+
+  <!-- ================= MAPA ================= -->
+  <section class="view" id="view-mapa" aria-labelledby="h-mapa">
+    <div class="view-head">
+      <h2 id="h-mapa">Ruta hacia la Galaxia Lectora</h2>
+      <p>Cada página leída suma 1 punto estelar. Cada libro terminado regala 50 puntos más.</p>
+    </div>
+    <div class="map-layout">
+      <div class="card map-card">
+        <div class="map-scroll">
+          <svg id="map" viewBox="0 0 1000 660" role="group" aria-label="Mapa de la ruta con la posición de cada tripulante"></svg>
+        </div>
+        <p class="map-rule">Toca una nave para ver el viaje de ese tripulante.</p>
+      </div>
+      <aside class="card detail" id="detail" aria-live="polite"></aside>
+    </div>
+    <h3>Tripulación en ruta</h3>
+    <div class="crew" id="crew"></div>
+  </section>
+
+  <!-- ================= TRIPULACIÓN ================= -->
+  <section class="view" id="view-tripulacion" aria-labelledby="h-trip">
+    <div class="view-head">
+      <h2 id="h-trip">Tripulación</h2>
+      <p id="roster-count" class="note"></p>
+    </div>
+    <div class="card teacher-only">
+      <h3>Añadir tripulantes</h3>
+      <form id="student-form">
+        <div class="fields">
+          <div class="field wide">
+            <label for="student-names">Nombres del alumnado</label>
+            <textarea id="student-names" rows="4" style="min-height:96px" placeholder="Un nombre por línea. Puedes pegar la lista de clase entera."></textarea>
+            <span class="hint">Escribe un nombre o pega varios, uno por línea. Cada tripulante recibe su código de 4 cifras para entrar y una nave de un color, que puedes cambiar tocándola.</span>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn" type="submit">Añadir a la tripulación</button>
+          <span class="err" id="student-err" role="alert"></span>
+        </div>
+      </form>
+    </div>
+    <div class="card codes-card">
+      <div>
+        <h3>Códigos de acceso</h3>
+        <p class="note">Tú entras con tu clave de maestro. Cada tripulante entra con su código de 4 cifras y ve la web en modo alumno.</p>
+      </div>
+      <form data-form="none">
+        <button class="btn small ghost" type="button" id="copy-codes" data-act="copy-codes">Copiar lista de códigos</button>
+      </form>
+    </div>
+    <div class="rows" id="roster"></div>
+  </section>
+
+  <!-- ================= LECTURAS ================= -->
+  <section class="view" id="view-lecturas" aria-labelledby="h-lect">
+    <div class="view-head">
+      <h2 id="h-lect">Cuaderno de lecturas</h2>
+      <p id="lect-intro"></p>
+    </div>
+    <div class="card teacher-only">
+      <h3 id="book-form-title">Registrar un libro</h3>
+      <form id="book-form">
+        <div class="fields three">
+          <div class="field">
+            <label for="book-student">Tripulante</label>
+            <select id="book-student" required></select>
+          </div>
+          <div class="field">
+            <label for="book-title">Título del libro</label>
+            <input type="text" id="book-title" maxlength="120" required autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="book-author">Autor o autora</label>
+            <input type="text" id="book-author" maxlength="80" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="book-genre">Tipo de libro</label>
+            <select id="book-genre"></select>
+          </div>
+          <div class="field">
+            <label for="book-pages">Páginas del libro</label>
+            <input type="number" id="book-pages" min="1" max="5000" step="1" required inputmode="numeric">
+          </div>
+          <div class="field">
+            <label for="book-read">Páginas leídas hasta hoy</label>
+            <input type="number" id="book-read" min="0" max="5000" step="1" value="0" inputmode="numeric">
+            <label class="check" for="book-done"><input type="checkbox" id="book-done"> Ya lo ha terminado</label>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn" type="submit" id="book-submit">Registrar libro</button>
+          <button class="btn ghost" type="button" id="book-cancel" hidden>Cancelar</button>
+          <span class="err" id="book-err" role="alert"></span>
+        </div>
+      </form>
+    </div>
+    <div class="toolbar">
+      <h3 id="books-title">Libros registrados</h3>
+      <div class="field teacher-only">
+        <label for="book-filter">Ver los libros de</label>
+        <select id="book-filter"></select>
+      </div>
+    </div>
+    <div class="rows" id="books"></div>
+  </section>
+
+  <!-- ================= RETOS ================= -->
+  <section class="view" id="view-retos" aria-labelledby="h-retos">
+    <div class="view-head">
+      <h2 id="h-retos">Retos de grupo</h2>
+      <p>Misiones que solo se consiguen entre toda la clase.</p>
+    </div>
+    <div class="missions" id="missions"></div>
+    <div class="card teacher-only">
+      <h3 id="ch-form-title">Crear un reto nuevo</h3>
+      <form id="ch-form">
+        <div class="fields">
+          <div class="field">
+            <label for="ch-title">Nombre del reto</label>
+            <input type="text" id="ch-title" maxlength="80" required autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="ch-type">Qué se cuenta</label>
+            <select id="ch-type"></select>
+          </div>
+          <div class="field">
+            <label for="ch-target">Objetivo</label>
+            <input type="number" id="ch-target" min="1" max="1000000" step="1" required inputmode="numeric">
+          </div>
+          <div class="field wide">
+            <label for="ch-reward">Recompensa si lo conseguimos (opcional)</label>
+            <input type="text" id="ch-reward" maxlength="120" autocomplete="off" placeholder="Por ejemplo: una tarde de lectura en el patio">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn" type="submit" id="ch-submit">Crear reto</button>
+          <button class="btn ghost" type="button" id="ch-cancel" hidden>Cancelar</button>
+          <span class="err" id="ch-err" role="alert"></span>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ================= RESEÑAS ================= -->
+  <section class="view" id="view-resenas" aria-labelledby="h-res">
+    <div class="view-head">
+      <h2 id="h-res">Reseñas de la tripulación</h2>
+      <p id="rv-intro">Cuenta a tus compañeros qué te ha parecido tu libro. Sigue las cuatro etapas.</p>
+    </div>
+    <div class="card teacher-only" id="rv-pending-card" hidden>
+      <h3 id="rv-pending-title">Reseñas por aceptar</h3>
+      <p class="note" style="margin:-6px 0 14px">Al aceptar una reseña se publica para toda la clase, su libro queda registrado como terminado y el tripulante suma los puntos.</p>
+      <div class="reviews" id="rv-pending"></div>
+    </div>
+    <div class="card">
+      <form id="rv-form" class="wizard" novalidate>
+        <ol class="steps" id="rv-steps" aria-label="Etapas de la reseña">
+          <li>1. Tu libro</li><li>2. Tipo de libro</li><li>3. Páginas y estrellas</li><li>4. Tu opinión</li>
+        </ol>
+
+        <fieldset class="step" data-step="1">
+          <legend>¿Quién eres y qué libro has leído?</legend>
+          <div class="fields">
+            <p class="note student-only wide" id="rv-as" style="grid-column:1/-1"></p>
+            <div class="field teacher-only">
+              <label for="rv-student">Reseña de…</label>
+              <select id="rv-student"></select>
+            </div>
+            <div class="field w2">
+              <label for="rv-book">Mi libro</label>
+              <select id="rv-book"></select>
+            </div>
+            <div class="field wide" id="rv-title-field">
+              <label for="rv-title">Título del libro</label>
+              <input type="text" id="rv-title" maxlength="120" autocomplete="off">
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="step" data-step="2">
+          <legend>¿Qué tipo de libro es?</legend>
+          <div class="genres" id="rv-genres"></div>
+        </fieldset>
+
+        <fieldset class="step" data-step="3">
+          <legend>¿Cuántas páginas tiene y cuánto te ha gustado?</legend>
+          <div class="fields">
+            <div class="field">
+              <label for="rv-pages">Número de páginas</label>
+              <input type="number" id="rv-pages" min="1" max="5000" step="1" inputmode="numeric">
+            </div>
+            <div class="field">
+              <span class="label" id="rv-stars-label">Mi puntuación</span>
+              <div class="starpick" role="radiogroup" aria-labelledby="rv-stars-label" id="rv-stars"></div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="step" data-step="4">
+          <legend>Escribe tu reseña</legend>
+          <ul class="prompts">
+            <li>¿De qué trata el libro? No cuentes el final.</li>
+            <li>¿Qué es lo que más te ha gustado, y lo que menos?</li>
+            <li>¿A quién se lo recomendarías?</li>
+          </ul>
+          <div class="field">
+            <label for="rv-text">Mi reseña</label>
+            <textarea id="rv-text" maxlength="2000" placeholder="Empieza a escribir aquí…"></textarea>
+          </div>
+          <div class="counter">
+            <div class="bar" id="rv-bar"><i style="width:0%"></i></div>
+            <span><b id="rv-count">0</b> de 20 palabras como mínimo</span>
+          </div>
+        </fieldset>
+
+        <div class="form-actions">
+          <button class="btn ghost" type="button" id="rv-back">Atrás</button>
+          <button class="btn" type="button" id="rv-next">Siguiente</button>
+          <button class="btn" type="submit" id="rv-publish">Publicar reseña</button>
+          <span class="err" id="rv-err" role="alert"></span>
+        </div>
+      </form>
+    </div>
+
+    <div class="toolbar">
+      <h3 id="rv-feed-title">Reseñas publicadas</h3>
+      <div class="field">
+        <label for="rv-filter">Ver reseñas de</label>
+        <select id="rv-filter"></select>
+      </div>
+    </div>
+    <div class="reviews" id="reviews"></div>
+  </section>
+
+  <!-- ================= SEGUIMIENTO ================= -->
+  <section class="view" id="view-seguimiento" aria-labelledby="h-seg">
+    <div class="view-head">
+      <h2 id="h-seg">Seguimiento de la clase</h2>
+      <p>Solo se ve en modo maestro. Se actualiza solo cada vez que se registra un libro o cambian las páginas.</p>
+    </div>
+    <div class="seg-grid">
+      <div class="card">
+        <h3>Tipos de libro que leen</h3>
+        <p class="note" id="genre-note" style="margin:-6px 0 12px"></p>
+        <div class="donut-wrap"><div id="donut"></div><div id="genre-table"></div></div>
+      </div>
+      <div class="card chart">
+        <h3>Páginas leídas por semana</h3>
+        <p class="note" style="margin:-6px 0 12px">Entre toda la tripulación, últimas 8 semanas.</p>
+        <div id="weeks"></div>
+        <details class="tbl"><summary>Ver en tabla</summary><div id="weeks-table"></div></details>
+      </div>
+    </div>
+    <div class="card">
+      <div class="toolbar">
+        <div><h3>Quién necesita un empujón</h3><p class="note" id="idle-summary"></p></div>
+        <div class="field">
+          <label for="idle-days">Avisar si lleva sin actualizar</label>
+          <select id="idle-days"><option value="7">7 días o más</option><option value="10">10 días o más</option><option value="14">14 días o más</option><option value="21">21 días o más</option><option value="30">30 días o más</option></select>
+        </div>
+      </div>
+      <div class="rows" id="idle" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+</div>
+<div id="tip" role="tooltip"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<!-- Toda la lógica está en js/app.js, que habla con el servidor (carpeta api/, en PHP). -->
+<script src="js/app.js"></script>
+</body>
+</html>
